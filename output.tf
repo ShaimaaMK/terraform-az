@@ -10,5 +10,5 @@ output "admin_username" {
 
 output "vm_id" {
   description = "ID de la VM Spot"
-  value       = azurerm_linux_virtual_machine.vm_spot.id
+  value       = azurerm_linux_virtual_machine.spot_vm.id
 }
