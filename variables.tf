@@ -1,4 +1,4 @@
-variable "vm_name_" {
+variable "vm_name" {
   description = "Nom de la VM Spot à recréer"
   type        = string
 }
