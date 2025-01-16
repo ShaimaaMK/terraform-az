@@ -62,8 +62,8 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "20_04-lts"
-    version   = "20.04.202301130"
+    offer     = "0001-com-ubuntu-confidential-vm-focal"
+    sku       = "20_04-lts-cvm"
+    version   = "20.04.202111100"
   }
 }
