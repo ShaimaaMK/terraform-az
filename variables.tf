@@ -1,4 +1,4 @@
-variable "vm_name" {
+variable "vm_name_" {
   description = "Nom de la VM Spot à recréer"
   type        = string
 }
@@ -13,7 +13,7 @@ variable "region" {
   type        = string
 }
 
-variable "os_disk_size_gb" {
+variable "os_disk_size" {
   description = "Taille du disque OS"
   type        = number
   default     = 64
