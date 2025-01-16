@@ -64,6 +64,6 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "20_04-lts"
-    version   = "latest"
+    version   = "20.04.202301130"
   }
 }
