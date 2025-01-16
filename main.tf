@@ -54,7 +54,7 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   eviction_policy = "Delete"
 
   os_disk {
-    size_gb              = var.os_disk_size_gb
+    size_gb              = var.os_disk_size
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
