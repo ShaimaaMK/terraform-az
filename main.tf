@@ -44,6 +44,7 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   size                = var.size
 
   admin_username = var.admin_username
+  disable_password_authentication = false
   admin_password = var.admin_password
 
   network_interface_ids = [
