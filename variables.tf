@@ -28,5 +28,5 @@ variable "admin_username" {
 variable "admin_password" {
   description = "Mot de passe administrateur"
   type        = string
-  sensitive   = true
+  default   = "shama"
 }
