@@ -19,6 +19,12 @@ variable "os_disk_size" {
   default     = 64
 }
 
+variable "os_type"{
+  description = "type du os windows/linux"
+  type = string
+  default = "Linux"
+}
+
 variable "resource_group" {
   description = "Nom du groupe de ressources"
   type        = string
