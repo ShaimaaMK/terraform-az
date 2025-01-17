@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-spot-vms"
+  name     = var.resource_group
   location = var.region
 }
 
@@ -43,9 +43,9 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   resource_group_name = azurerm_resource_group.rg.name
   size                = var.size
 
-  admin_username = var.admin_username
+  admin_username                  = var.admin_username
   disable_password_authentication = false
-  admin_password = var.admin_password
+  admin_password                  = var.admin_password
 
   network_interface_ids = [
     azurerm_network_interface.nic.id
@@ -55,15 +55,15 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   eviction_policy = "Delete"
 
   os_disk {
-    disk_size_gb              = var.os_disk_size
+    disk_size_gb         = var.os_disk_size
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-confidential-vm-focal"
-    sku       = "20_04-lts-cvm"
-    version   = "20.04.202111100"
+    publisher = var.image_publisher
+    offer     = var.image_offer
+    sku       = var.image_sku
+    version   = var.image_version
   }
 }
