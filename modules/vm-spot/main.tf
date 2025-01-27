@@ -66,7 +66,7 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
     version   = var.image_version
   }
 
-  custom_data = var.custom_data
+  custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
 
   os_profile_linux_config {
     disable_password_authentication = false
