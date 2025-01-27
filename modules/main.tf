@@ -11,7 +11,7 @@ module "shared" {
 
 # Module pour recréer une VM Spot basée sur un snapshot
 module "vm_spot" {
-  source            = "./vm_spot"
+  source            = "./vm-spot"
   resource_group    = module.shared.resource_group_name
   region            = module.shared.region
   vm_name           = var.vm_name
