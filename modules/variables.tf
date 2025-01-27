@@ -29,6 +29,17 @@ variable "admin_password" {
   sensitive   = true
 }
 
+variable "os_type" {
+  description = "Type d’OS (Linux/Windows)"
+  type        = string
+}
+
+variable "custom_data" {
+  description = "Données personnalisées pour cloud-init"
+  type        = string
+}
+
+
 variable "os_disk_size" {
   description = "Taille du disque OS en Go"
   type        = number
