@@ -7,7 +7,6 @@ image_offer     = "UbuntuServer"
 image_sku       = "24.04-LTS"
 image_version   = "latest"
 
-custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
 
 tags = {
   environment = "production"
