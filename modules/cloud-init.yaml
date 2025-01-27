@@ -1,0 +1,137 @@
+#cloud-config
+packages:
+  - curl
+  - jq
+  - azure-cli
+
+write_files:
+  - path: /usr/local/bin/notify.sh
+    permissions: '0755'
+    owner: root:root
+    content: |
+      #!/bin/bash
+
+      METADATA_URL="http://169.254.169.254/metadata/scheduledevents?format=json&api-version=2020-07-01"
+      WEBHOOK_URL="https://your-jenkins-url/generic-webhook-trigger/invoke?token=your_token"
+
+      VM_NAME=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-02-01&format=text")
+      VM_SIZE=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2021-02-01&format=text")
+      VM_REGION=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/location?api-version=2021-02-01&format=text")
+      VM_RESOURCE_GROUP=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/resourceGroupName?api-version=2021-02-01&format=text")
+      VM_SUBSCRIPTION_ID=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/subscriptionId?api-version=2021-02-01&format=text")
+      VM_OS_DISK_SIZE=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/osDiskSizeMB?api-version=2021-02-01&format=text")
+      VM_OS_TYPE=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/osType?api-version=2021-02-01&format=text")
+      VM_IMAGE_PUBLISHER=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/imagePublisher?api-version=2021-02-01&format=text")
+      VM_IMAGE_OFFER=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/imageOffer?api-version=2021-02-01&format=text")
+      VM_IMAGE_SKU=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/imageSku?api-version=2021-02-01&format=text")
+      VM_IMAGE_VERSION=$(curl -s -H "Metadata:true" "http://169.254.169.254/metadata/instance/compute/imageVersion?api-version=2021-02-01&format=text")
+
+      VM_IMAGE_PUBLISHER=${VM_IMAGE_PUBLISHER:-"Canonical"}
+      VM_IMAGE_OFFER=${VM_IMAGE_OFFER:-"UbuntuServer"}
+      VM_IMAGE_SKU=${VM_IMAGE_SKU:-"24_04-lts"}
+      VM_IMAGE_VERSION=${VM_IMAGE_VERSION:-"latest"}
+      VM_OS_DISK_SIZE=${VM_OS_DISK_SIZE:-"64"}
+
+      echo "VM_NAME: $VM_NAME"
+      echo "VM_SIZE: $VM_SIZE"
+      echo "VM_REGION: $VM_REGION"
+      echo "VM_RESOURCE_GROUP: $VM_RESOURCE_GROUP"
+      echo "VM_SUBSCRIPTION_ID: $VM_SUBSCRIPTION_ID"
+      echo "VM_OS_DISK_SIZE: $VM_OS_DISK_SIZE"
+      echo "VM_OS_TYPE: $VM_OS_TYPE"
+      echo "VM_IMAGE_PUBLISHER: $VM_IMAGE_PUBLISHER"
+      echo "VM_IMAGE_OFFER: $VM_IMAGE_OFFER"
+      echo "VM_IMAGE_SKU: $VM_IMAGE_SKU"
+      echo "VM_IMAGE_VERSION: $VM_IMAGE_VERSION"
+
+      TEST_INTERRUPT="/tmp/test-interrupt"
+
+      while true; do
+        echo "Interrogation de ${METADATA_URL}..."
+        # Vérifie les événements planifiés
+        RESPONSE=$(curl -s -H "Metadata:true" "$METADATA_URL")
+
+        if [ -z "$RESPONSE" ]; then
+            echo "Aucune réponse depuis l'endpoint de metadata..."
+        else
+            echo "Réponse reçue."
+        fi
+
+        EVENT_TYPES=$(echo "$RESPONSE" | jq -r '.Events[].EventType')
+
+        if echo "$EVENT_TYPES" | grep -q "Preempt" || [ -f "$TEST_INTERRUPT" ]; then
+          echo "Interruption Spot détectée pour $VM_NAME ($VM_SIZE) !"
+
+          DISK_NAME="${VM_NAME}_OsDisk"
+
+          az snapshot create \
+            --resource-group "$VM_RESOURCE_GROUP" \
+            --name "${VM_NAME}_snapshot_$(date +%Y%m%d%H%M%S)" \
+            --source "/subscriptions/${VM_SUBSCRIPTION_ID}/resourceGroups/${VM_RESOURCE_GROUP}/providers/Microsoft.Compute/disks/${DISK_NAME}" \
+            --location "$VM_REGION" \
+            --output none &
+
+          SNAPSHOT_PID=$!
+
+          sleep 2
+
+          SNAPSHOT_ID=$(az snapshot list --resource-group "$VM_RESOURCE_GROUP" --query "[?contains(name, '${VM_NAME}_snapshot')].id | [0]" -o tsv)
+
+          PAYLOAD=$(jq -n \
+            --arg vm_name "$VM_NAME" \
+            --arg size "$VM_SIZE" \
+            --arg region "$VM_REGION" \
+            --arg resource_group "$VM_RESOURCE_GROUP" \
+            --arg os_disk_size "$VM_OS_DISK_SIZE" \
+            --arg os_type "$VM_OS_TYPE" \
+            --arg image_publisher "$VM_IMAGE_PUBLISHER" \
+            --arg image_offer "$VM_IMAGE_OFFER" \
+            --arg image_sku "$VM_IMAGE_SKU" \
+            --arg image_version "$VM_IMAGE_VERSION" \
+            --arg snapshot_id "$SNAPSHOT_ID" \
+            '{
+              vm_name: $vm_name,
+              size: $size,
+              region: $region,
+              resource_group: $resource_group,
+              os_disk_size: $os_disk_size,
+              os_type: $os_type,
+              image_publisher: $image_publisher,
+              image_offer: $image_offer,
+              image_sku: $image_sku,
+              image_version: $image_version,
+              snapshot_id: $snapshot_id
+            }')
+
+          echo "Payload envoyé : $PAYLOAD"
+          curl -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$WEBHOOK_URL" &
+
+          [ -f "$TEST_INTERRUPT" ] && rm "$TEST_INTERRUPT"
+
+          break
+        fi
+
+        sleep 1
+      done
+
+  - path: /etc/systemd/system/notify-vm.service
+    permissions: '0644'
+    owner: root:root
+    content: |
+      [Unit]
+      Description=Service de surveillance des interruptions pour VMs Spot
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/notify.sh
+      Restart=always
+      User=root
+      Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  - systemctl daemon-reload
+  - systemctl enable notify-vm.service
+  - systemctl start notify-vm.service
