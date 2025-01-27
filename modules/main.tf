@@ -4,14 +4,14 @@ provider "azurerm" {
 
 # Module partagé pour les ressources Azure communes
 module "shared" {
-  source         = "./modules/shared"
+  source         = "./shared"
   resource_group = var.resource_group
   region         = var.region
 }
 
 # Module pour recréer une VM Spot basée sur un snapshot
 module "vm_spot" {
-  source            = "./modules/vm_spot"
+  source            = "./vm_spot"
   resource_group    = module.shared.resource_group_name
   region            = module.shared.region
   vm_name           = var.vm_name
