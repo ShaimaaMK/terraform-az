@@ -52,7 +52,7 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   priority        = "Spot"
   eviction_policy = "Delete"
 
-  os_disk {
+  storage_os_disk {
     name                 = "${var.vm_name}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
