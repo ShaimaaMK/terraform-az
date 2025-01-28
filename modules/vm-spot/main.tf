@@ -25,15 +25,15 @@ resource "azurerm_network_interface" "nic" {
   )
 }
 
-resource "azurerm_managed_disk" "os_disk_from_snapshot" {
-  name                = "${var.vm_name}-osdisk-${timestamp()}"
-  location            = var.region
-  resource_group_name = var.resource_group
-  storage_account_type = "Standard_LRS"
-  create_option        = "Copy"
-  source_resource_id   = var.snapshot_id
-  disk_size_gb         = var.os_disk_size
-}
+//resource "azurerm_managed_disk" "os_disk_from_snapshot" {
+  //name                = "${var.vm_name}-osdisk-${timestamp()}"
+ // location            = var.region
+ // resource_group_name = var.resource_group
+ // storage_account_type = "Standard_LRS"
+ // create_option        = "Copy"
+ // source_resource_id   = var.snapshot_id
+ // disk_size_gb         = var.os_disk_size
+//}
 
 resource "azurerm_linux_virtual_machine" "spot_vm" {
   name                = var.vm_name
@@ -56,9 +56,8 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
     name                 = "${var.vm_name}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-    managed_disk_id      = azurerm_managed_disk.os_disk_from_snapshot.id
-   // create_option         = "FromImage"
-    //source_uri            = var.snapshot_id
+    create_option         = "FromImage"
+    source_uri            = var.snapshot_id
   }
 
   
