@@ -56,14 +56,12 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
     name                 = "${var.vm_name}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
+    managed_disk_id      = azurerm_managed_disk.os_disk_from_snapshot.id
+   // create_option         = "FromImage"
+    //source_uri            = var.snapshot_id
   }
 
-  storage_data_disk {
-    caching           = "ReadOnly"
-    managed_disk_id   = azurerm_managed_disk.os_disk_from_snapshot.id
-    create_option     = "Attach"
-  }
-
+  
   source_image_reference {
     publisher = var.image_publisher
     offer     = var.image_offer
