@@ -34,10 +34,7 @@ variable "os_type" {
   type        = string
 }
 
-variable "custom_data" {
-  description = "Données personnalisées pour cloud-init"
-  type        = string
-}
+
 
 
 variable "os_disk_size" {
