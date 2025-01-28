@@ -55,6 +55,7 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   os_disk {
     name                 = "${var.vm_name}-osdisk"
     caching              = "ReadWrite"
+    create_option        = "Attach"
     storage_account_type = "Standard_LRS"
     managed_disk_id      = azurerm_managed_disk.os_disk_from_snapshot.id
   }
