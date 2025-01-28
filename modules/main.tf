@@ -23,7 +23,6 @@ module "vm_spot" {
   image_offer       = var.image_offer
   image_sku         = var.image_sku
   image_version     = var.image_version
-  custom_data       = var.custom_data
   snapshot_id       = var.snapshot_id
   subnet_id         = module.shared.subnet_id
   public_ip_id      = "" # Pas d'adresse IP publique partagée
