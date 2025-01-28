@@ -9,3 +9,8 @@ output "subnet_id" {
 output "vnet_id" {
   value = azurerm_virtual_network.vnet.id
 }
+
+output "region" {
+  description = "Région Azure utilisée"
+  value       = var.region
+}
