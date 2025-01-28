@@ -63,10 +63,7 @@ variable "image_version" {
   type        = string
 }
 
-variable "custom_data" {
-  description = "Données personnalisées (cloud-init)"
-  type        = string
-}
+
 
 variable "snapshot_id" {
   description = "ID du snapshot pour reprovisionner la VM"
