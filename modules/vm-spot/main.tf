@@ -31,7 +31,7 @@ resource "azurerm_managed_disk" "os_disk_from_snapshot" {
   resource_group_name = var.resource_group
   storage_account_type = "Standard_LRS"
   create_option        = "Copy"
-  source_snapshot_id   = var.snapshot_id
+  source_resource_id   = var.snapshot_id
   disk_size_gb         = var.os_disk_size
 }
 
