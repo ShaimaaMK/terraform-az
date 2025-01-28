@@ -26,6 +26,6 @@ module "vm_spot" {
   snapshot_id       = var.snapshot_id
   subnet_id         = module.shared.subnet_id
   public_ip_id      = "" # Pas d'adresse IP publique partagée
-  resource_group_id = azurerm_resource_group.rg.id
+  resource_group_id =  module.shared.resource_group_id
   tags              = var.tags
 }
