@@ -25,15 +25,26 @@ resource "azurerm_network_interface" "nic" {
   )
 }
 
-//resource "azurerm_managed_disk" "os_disk_from_snapshot" {
-  //name                = "${var.vm_name}-osdisk-${timestamp()}"
- // location            = var.region
- // resource_group_name = var.resource_group
- // storage_account_type = "Standard_LRS"
- // create_option        = "Copy"
- // source_resource_id   = var.snapshot_id
- // disk_size_gb         = var.os_disk_size
-//}
+resource "azurerm_managed_disk" "os_disk_from_snapshot" {
+  name                = "${var.vm_name}-osdisk-${timestamp()}"
+  location            = var.region
+  resource_group_name = var.resource_group
+  storage_account_type = "Standard_LRS"
+  create_option        = "Copy"
+  source_resource_id   = var.snapshot_id
+  disk_size_gb         = var.os_disk_size
+}
+resource "azurerm_image" "vm_image_from_disk" {
+  name                = "${var.vm_name}-image"
+  location            = var.region
+  resource_group_name = var.resource_group
+
+  os_disk {
+    os_type  = "Linux"
+    os_state = "Generalized"
+    managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
+  }
+}
 
 resource "azurerm_linux_virtual_machine" "spot_vm" {
   name                = var.vm_name
@@ -52,12 +63,11 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   priority        = "Spot"
   eviction_policy = "Delete"
 
+  source_image_id = azurerm_image.vm_image_from_disk.id
   os_disk {
     name                 = "${var.vm_name}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-    create_option         = "FromImage"
-    source_uri            = var.snapshot_id
   }
 
   
