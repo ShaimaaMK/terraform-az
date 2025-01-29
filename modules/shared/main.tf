@@ -1,7 +1,8 @@
-resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group
+data "azurerm_resource_group" "rg" {
+  name = var.resource_group
   location = var.region
 }
+
 
 resource "azurerm_virtual_network" "vnet" {
   name                = "vnet-spot"
