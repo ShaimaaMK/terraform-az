@@ -1,3 +1,7 @@
+locals {
+  # Format custom sans : ni T
+  safe_timestamp = formatdate("YYYYMMddHHmmss", timestamp())
+}
 resource "azurerm_public_ip" "pip" {
   name                = "${var.vm_name}-pip"
   location            = var.region
@@ -26,7 +30,7 @@ resource "azurerm_network_interface" "nic" {
 }
 
 resource "azurerm_managed_disk" "os_disk_from_snapshot" {
-  name                = "${var.vm_name}-osdisk-${timestamp()}"
+  name                = "${var.vm_name}-osdisk-${local.safe_timestamp}"
   location            = var.region
   resource_group_name = var.resource_group
   storage_account_type = "Standard_LRS"
