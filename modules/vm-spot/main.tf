@@ -38,11 +38,14 @@ resource "azurerm_image" "vm_image_from_disk" {
   name                = "${var.vm_name}-image"
   location            = var.region
   resource_group_name = var.resource_group
+  
 
   os_disk {
     os_type  = "Linux"
     os_state = "Generalized"
     managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
+    storage_type = "Standard_LRS"
+
   }
 }
 
