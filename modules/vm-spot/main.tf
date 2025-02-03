@@ -108,7 +108,8 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
   type_handler_version = "2.1"
 
   settings = jsonencode({
-    fileUris         = ["https://<votre-url>/cloud-init.yaml"]
+    fileUris         = ["https://raw.githubusercontent.com/ShaimaaMK/terraform-az/main/modules/vm-spot/cloud-init.yaml
+"]
     commandToExecute = "sh cloud-init.yaml"
   })
   
