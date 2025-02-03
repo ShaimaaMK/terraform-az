@@ -4,9 +4,13 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "=3.64.0"
     }
-    
   }
 }
+
+provider "azurerm" {
+  features {}
+}
+
 
 
 # Module partagé pour les ressources Azure communes
