@@ -53,17 +53,17 @@ resource "azurerm_virtual_machine" "spot_vm" {
   #spot_instance_enabled = true
   #eviction_policy       = "Delete"
 
-  os_profile {
-    computer_name  = var.vm_name
-    admin_username = var.admin_username
-    admin_password = var.admin_password
-    custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
-  }
+#  os_profile {
+ #   computer_name  = var.vm_name
+  #  admin_username = var.admin_username
+  #  admin_password = var.admin_password
+  #  custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
+ # }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
+ # os_profile_linux_config {
+  #  disable_password_authentication = false
     
-  }
+ # }
 
 
   storage_os_disk {
