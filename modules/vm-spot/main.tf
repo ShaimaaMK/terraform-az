@@ -60,6 +60,7 @@ resource "azurerm_virtual_machine" "spot_vm" {
     computer_name  = var.vm_name
     admin_username = var.admin_username
     admin_password = var.admin_password
+    custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
   }
 
   # OS profile Linux config
@@ -67,7 +68,7 @@ resource "azurerm_virtual_machine" "spot_vm" {
     disable_password_authentication = false
 
     # custom_data belongs inside os_profile_linux_config in the older resource
-    custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
+    
   }
 
   # Old resource calls it storage_image_reference, not source_image_reference
