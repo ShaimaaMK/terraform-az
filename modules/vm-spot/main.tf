@@ -100,6 +100,27 @@ provisioner "local-exec" {
 }
 }
 
+resource "azurerm_virtual_machine_extension" "custom_script" {
+  name                 = "${azurerm_virtual_machine.spot_vm.name}-cse"
+  virtual_machine_id   = azurerm_virtual_machine.spot_vm.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.1"
+
+  settings = jsonencode({
+    fileUris         = ["https://<votre-url>/cloud-init.yaml"]
+    commandToExecute = "sh cloud-init.yaml"
+  })
+  
+  tags = merge(
+    {
+      managed_by = "terraform"
+    },
+    var.tags
+  )
+}
+
+
 resource "azurerm_role_assignment" "snapshot_creator" {
   scope                = var.resource_group_id
   role_definition_name = "Contributor"
