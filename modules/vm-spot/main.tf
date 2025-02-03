@@ -71,6 +71,7 @@ resource "azurerm_virtual_machine" "spot_vm" {
     managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
     create_option   = "Attach"
     caching         = "ReadWrite"
+    os_type         = "Linux"
   }
 
   identity {
