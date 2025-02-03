@@ -34,22 +34,9 @@ resource "azurerm_managed_disk" "os_disk_from_snapshot" {
   source_resource_id   = var.snapshot_id
   disk_size_gb         = var.os_disk_size
 }
-resource "azurerm_image" "vm_image_from_disk" {
-  name                = "${var.vm_name}-image"
-  location            = var.region
-  resource_group_name = var.resource_group
-  
 
-  os_disk {
-    os_type  = "Linux"
-    os_state = "Generalized"
-    managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
-    storage_type = "Standard_LRS"
 
-  }
-}
-
-resource "azurerm_linux_virtual_machine" "spot_vm" {
+resource "azurerm_virtual_machine" "spot_vm" {
   name                = var.vm_name
   location            = var.region
   resource_group_name = var.resource_group
@@ -66,11 +53,12 @@ resource "azurerm_linux_virtual_machine" "spot_vm" {
   priority        = "Spot"
   eviction_policy = "Delete"
 
-  source_image_id = azurerm_image.vm_image_from_disk.id
-  os_disk {
-    name                 = "${var.vm_name}-osdisk"
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+  
+  storage_os_disk {
+    name            = "${var.vm_name}-osdisk"
+    managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
+    create_option   = "Attach"
+    caching         = "ReadWrite"
   }
 
   
