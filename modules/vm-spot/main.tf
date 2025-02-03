@@ -47,15 +47,12 @@ resource "azurerm_virtual_machine" "spot_vm" {
   location            = var.region
   resource_group_name = var.resource_group
 
-  # The older VM resource uses vm_size, not "size".
   network_interface_ids = [azurerm_network_interface.nic.id]
   vm_size               = var.size
 
-  # Spot/eviction are valid in this older resource:
-  priority        = "Spot"
-  eviction_policy = "Delete"
+  spot_instance_enabled = true
+  eviction_policy       = "Delete"
 
-  # OS profile for credentials
   os_profile {
     computer_name  = var.vm_name
     admin_username = var.admin_username
@@ -63,18 +60,12 @@ resource "azurerm_virtual_machine" "spot_vm" {
     custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
   }
 
-  # OS profile Linux config
   os_profile_linux_config {
     disable_password_authentication = false
-
-    # custom_data belongs inside os_profile_linux_config in the older resource
     
   }
 
-  # Old resource calls it storage_image_reference, not source_image_reference
-  # Only include this block if you also want to specify a "reference" image.
-  # Usually, if you are attaching a specialized disk, you omit this. But if you
-  # want both, keep it:
+
   storage_image_reference {
     publisher = var.image_publisher
     offer     = var.image_offer
@@ -82,7 +73,6 @@ resource "azurerm_virtual_machine" "spot_vm" {
     version   = var.image_version
   }
 
-  # Attach the specialized OS disk you created from the snapshot
   storage_os_disk {
     name            = "${var.vm_name}-osdisk"
     managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
@@ -90,12 +80,10 @@ resource "azurerm_virtual_machine" "spot_vm" {
     caching         = "ReadWrite"
   }
 
-  # System-assigned identity
   identity {
     type = "SystemAssigned"
   }
 
-  # Tags & lifecycle
   tags = merge(
     {
       managed_by = "terraform"
@@ -108,7 +96,6 @@ resource "azurerm_virtual_machine" "spot_vm" {
   }
 }
 
-# Fix the role assignment to reference azurerm_virtual_machine, not azurerm_linux_virtual_machine
 resource "azurerm_role_assignment" "snapshot_creator" {
   scope                = var.resource_group_id
   role_definition_name = "Contributor"
