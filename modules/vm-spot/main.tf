@@ -43,7 +43,7 @@ resource "azurerm_managed_disk" "os_disk_from_snapshot" {
 }
 
 resource "azurerm_virtual_machine" "spot_vm" {
-  name                = var.vm_name
+  name                = "${var.vm_name}-spot"
   location            = var.region
   resource_group_name = var.resource_group
 
