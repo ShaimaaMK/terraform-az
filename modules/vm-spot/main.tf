@@ -42,58 +42,73 @@ resource "azurerm_managed_disk" "os_disk_from_snapshot" {
   disk_size_gb         = var.os_disk_size
 }
 
-resource "azurerm_virtual_machine" "spot_vm" {
-  name                = var.vm_name
-  location            = var.region
-  resource_group_name = var.resource_group
+resource "azapi_resource" "spot_vm" {
+  type      = "Microsoft.Compute/virtualMachines@2022-03-01" # or a similar stable API version
+  name      = var.vm_name
+  parent_id = var.resource_group_id
+  location  = var.region
 
-  network_interface_ids = [azurerm_network_interface.nic.id]
-  vm_size               = var.size
+  # The "body" is raw ARM JSON, so we can specify Spot + attach OS disk
+  body = jsonencode({
+    properties = {
+      hardwareProfile = {
+        vmSize = var.size
+      }
+      storageProfile = {
+        # If you also want to specify an image reference, you can do so here
+        # for non-specialized scenarios. But if your disk is fully specialized,
+        # the image reference is typically omitted or just for metadata.
+        imageReference = {
+          publisher = var.image_publisher
+          offer     = var.image_offer
+          sku       = var.image_sku
+          version   = var.image_version
+        }
+        osDisk = {
+          name         = "${var.vm_name}-osdisk"
+          caching      = "ReadWrite"
+          createOption = "Attach"
+          osType       = "Linux" # or "Windows"
+          managedDisk = {
+            id = azurerm_managed_disk.os_disk_from_snapshot.id
+          }
+        }
+      }
+      osProfile = {
+        computerName  = var.vm_name
+        adminUsername = var.admin_username
+        adminPassword = var.admin_password
 
-  spot_instance_enabled = true
-  eviction_policy       = "Delete"
+        linuxConfiguration = {
+          disablePasswordAuthentication = false
+        }
 
-  os_profile {
-    computer_name  = var.vm_name
-    admin_username = var.admin_username
-    admin_password = var.admin_password
-    custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
-  }
+        # Cloud-init custom data in base64
+        customData = base64encode(file("${path.module}/cloud-init.yaml"))
+      }
+      networkProfile = {
+        networkInterfaces = [
+          {
+            id = azurerm_network_interface.nic.id
+          }
+        ]
+      }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
-    
-  }
+      # The key Spot settings below:
+      priority        = "Spot"
+      evictionPolicy  = "Delete"  # or "Deallocate"
+      # (Optional) if you want to cap the price:
+      # billingProfile = {
+      #   maxPrice = -1
+      # }
+    }
+    identity = {
+      type = "SystemAssigned"
+    }
+  })
 
-
-  storage_image_reference {
-    publisher = var.image_publisher
-    offer     = var.image_offer
-    sku       = var.image_sku
-    version   = var.image_version
-  }
-
-  storage_os_disk {
-    name            = "${var.vm_name}-osdisk"
-    managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
-    create_option   = "Attach"
-    caching         = "ReadWrite"
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  tags = merge(
-    {
-      managed_by = "terraform"
-    },
-    var.tags
-  )
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  # For convenience, you may want to read back the entire response from Azure:
+  response_export_values = ["*"]
 }
 
 resource "azurerm_role_assignment" "snapshot_creator" {
