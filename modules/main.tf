@@ -1,7 +1,16 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "=3.64.0"
+    }
+  }
+}
+
 provider "azurerm" {
-   version = "=3.64.0"
   features {}
 }
+
 
 # Module partagé pour les ressources Azure communes
 module "shared" {
