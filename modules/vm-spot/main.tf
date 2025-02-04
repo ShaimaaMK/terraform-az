@@ -46,6 +46,7 @@ resource "azurerm_virtual_machine" "spot_vm" {
   name                = "${var.vm_name}-spot"
   location            = var.region
   resource_group_name = var.resource_group
+  
 
   network_interface_ids = [azurerm_network_interface.nic.id]
   vm_size               = var.size
@@ -64,6 +65,9 @@ resource "azurerm_virtual_machine" "spot_vm" {
   #  disable_password_authentication = false
     
  # }
+  security_profile {
+    security_type = "TrustedLaunch"
+  }
 
 
   storage_os_disk {
