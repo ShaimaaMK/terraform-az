@@ -65,9 +65,7 @@ resource "azurerm_virtual_machine" "spot_vm" {
   #  disable_password_authentication = false
     
  # }
-  security_profile {
-    security_type = "TrustedLaunch"
-  }
+  
 
 
   storage_os_disk {
@@ -99,7 +97,8 @@ provisioner "local-exec" {
       --name ${self.name} \
       --set priority=Spot \
       evictionPolicy=Deallocate \
-      billingProfile.maxPrice=-1
+      billingProfile.maxPrice=-1 \
+      securityProfile.securityType="TrustedLaunch"
   EOT
 }
 }
