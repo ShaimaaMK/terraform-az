@@ -32,32 +32,32 @@ resource "azurerm_network_interface" "nic" {
   )
 }
 
+resource "azurerm_managed_disk" "os_disk_from_snapshot" {
+  name                    = "${var.vm_name}-osdisk"
+  location                = var.region
+  resource_group_name     = var.resource_group
+  storage_account_type    = "Standard_LRS"
+  create_option           = "Copy"
+  source_resource_id      = var.snapshot_id
+  disk_size_gb            = var.os_disk_size
+}
 
 resource "azurerm_virtual_machine" "spot_vm" {
   name                = "${var.vm_name}-spot"
   location            = var.region
   resource_group_name = var.resource_group
-  
 
   network_interface_ids = [azurerm_network_interface.nic.id]
   vm_size               = var.size
 
-  #spot_instance_enabled = true
-  #eviction_policy       = "Delete"
-
-#  os_profile {
- #   computer_name  = var.vm_name
-  #  admin_username = var.admin_username
-  #  admin_password = var.admin_password
-  #  custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
- # }
-
- # os_profile_linux_config {
-  #  disable_password_authentication = false
-    
- # }
-  
-
+  # Bloc storage_os_disk pour spécifier le disque attaché
+  storage_os_disk {
+    name            = "${var.vm_name}-osdisk"
+    managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id  # Référence au disque géré
+    create_option   = "Attach"  # Indique que nous attachons un disque existant
+    caching         = "ReadWrite"
+    os_type         = "Linux"  # Type du système d'exploitation
+  }
 
   identity {
     type = "SystemAssigned"
@@ -73,17 +73,20 @@ resource "azurerm_virtual_machine" "spot_vm" {
   lifecycle {
     create_before_destroy = true
   }
+}
 
-  resource "null_resource" "update_vm_security_and_attach_disk" {
+# Utilisation de null_resource pour mettre à jour la VM et appliquer les configurations Spot et Trusted Launch
+resource "null_resource" "update_vm_security_and_attach_disk" {
   provisioner "local-exec" {
     command = <<EOT
-
+      # Mettre à jour la VM pour la rendre Spot
       az vm update \
         --resource-group ${var.resource_group} \
         --name ${azurerm_virtual_machine.spot_vm.name} \
         --set priority=Spot \
-        --set evictionPolicy=Delete
+        --set evictionPolicy=Deallocate  # Utiliser Deallocate pour la politique d'éviction
 
+      # Appliquer le type de sécurité Trusted Launch
       az vm update \
         --resource-group ${var.resource_group} \
         --name ${azurerm_virtual_machine.spot_vm.name} \
@@ -103,9 +106,6 @@ resource "azurerm_virtual_machine" "spot_vm" {
   ]
 }
 
-
-}
-
 resource "azurerm_virtual_machine_extension" "custom_script" {
   name                 = "${azurerm_virtual_machine.spot_vm.name}-cse"
   virtual_machine_id   = azurerm_virtual_machine.spot_vm.id
@@ -114,7 +114,7 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
   type_handler_version = "2.1"
 
   settings = jsonencode({
-    fileUris  =        ["https://raw.githubusercontent.com/ShaimaaMK/terraform-az/main/modules/vm-spot/cloud-init.yaml"]
+    fileUris  = ["https://raw.githubusercontent.com/ShaimaaMK/terraform-az/main/modules/vm-spot/cloud-init.yaml"]
     commandToExecute = "sh cloud-init.yaml"
   })
   
@@ -125,7 +125,6 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
     var.tags
   )
 }
-
 
 resource "azurerm_role_assignment" "snapshot_creator" {
   scope                = var.resource_group_id
