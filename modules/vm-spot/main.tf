@@ -32,15 +32,6 @@ resource "azurerm_network_interface" "nic" {
   )
 }
 
-resource "azurerm_managed_disk" "os_disk_from_snapshot" {
-  name                = "${var.vm_name}-osdisk"
-  location            = var.region
-  resource_group_name = var.resource_group
-  storage_account_type = "Standard_LRS"
-  create_option        = "Copy"
-  source_resource_id   = var.snapshot_id
-  disk_size_gb         = var.os_disk_size
-}
 
 resource "azurerm_virtual_machine" "spot_vm" {
   name                = "${var.vm_name}-spot"
@@ -68,14 +59,6 @@ resource "azurerm_virtual_machine" "spot_vm" {
   
 
 
-  storage_os_disk {
-    name            = "${var.vm_name}-osdisk"
-    managed_disk_id = azurerm_managed_disk.os_disk_from_snapshot.id
-    create_option   = "Attach"
-    caching         = "ReadWrite"
-    os_type         = "Linux"
-  }
-
   identity {
     type = "SystemAssigned"
   }
@@ -90,17 +73,37 @@ resource "azurerm_virtual_machine" "spot_vm" {
   lifecycle {
     create_before_destroy = true
   }
-provisioner "local-exec" {
-  command = <<EOT
-    az vm update \
-      --resource-group ${var.resource_group} \
-      --name ${self.name} \
-      --set priority=Spot \
-      evictionPolicy=Deallocate \
-      billingProfile.maxPrice=-1 \
-      securityProfile.securityType="TrustedLaunch"
-  EOT
+
+  resource "null_resource" "update_vm_security_and_attach_disk" {
+  provisioner "local-exec" {
+    command = <<EOT
+
+      az vm update \
+        --resource-group ${var.resource_group} \
+        --name ${azurerm_virtual_machine.spot_vm.name} \
+        --set priority=Spot \
+        --set evictionPolicy=Delete
+
+      az vm update \
+        --resource-group ${var.resource_group} \
+        --name ${azurerm_virtual_machine.spot_vm.name} \
+        --set securityProfile.securityType="TrustedLaunch"
+
+      # Attacher le disque après mise à jour
+      az vm disk attach \
+        --resource-group ${var.resource_group} \
+        --vm-name ${azurerm_virtual_machine.spot_vm.name} \
+        --name ${azurerm_managed_disk.os_disk_from_snapshot.name}
+    EOT
+  }
+
+  depends_on = [
+    azurerm_virtual_machine.spot_vm,
+    azurerm_managed_disk.os_disk_from_snapshot
+  ]
 }
+
+
 }
 
 resource "azurerm_virtual_machine_extension" "custom_script" {
