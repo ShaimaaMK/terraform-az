@@ -16,9 +16,8 @@ provider "azurerm" {
 }
 
 provider "azapi" {
+  
 }
-
-
 
 
 # Module partagé pour les ressources Azure communes
