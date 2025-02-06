@@ -1,3 +1,24 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.60"
+    }
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 1.5"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+provider "azapi" {
+  
+}
+
 resource "azurerm_public_ip" "pip" {
   name                = "${var.vm_name}-pip"
   location            = var.region
