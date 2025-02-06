@@ -48,7 +48,7 @@ resource "azapi_resource" "spot_vm" {
   type      = "Microsoft.Compute/virtualMachines@2022-03-01"  
   
   name      = "${var.vm_name}-spot"
-  parent_id = azurerm_resource_group.this.id  
+  parent_id = azurerm_resource_group.rg.id  
   location  = var.region
   tags      = var.tags
 
@@ -74,7 +74,7 @@ resource "azapi_resource" "spot_vm" {
 
       storageProfile = {
         osDisk = {
-          name         = "${var.vm_name}-osdisk"
+          name         = "${var.vm_name}-spot-osdisk"
           createOption = "Attach"
           caching      = "ReadWrite"
           osType       = "Linux"
