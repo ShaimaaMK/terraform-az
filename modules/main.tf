@@ -31,7 +31,7 @@ module "shared" {
 module "vm_spot" {
   source            = "./vm-spot"
   resource_group    = module.shared.resource_group_name
-  resource_group_id = azurerm_resource_group.rg.id
+ # resource_group_id = azurerm_resource_group.rg.id
   region            = module.shared.region
   vm_name           = var.vm_name
   size              = var.size
