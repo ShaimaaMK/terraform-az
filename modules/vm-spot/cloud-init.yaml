@@ -123,6 +123,7 @@ write_files:
       After=network.target
 
       [Service]
+      Type=simple
       ExecStart=/usr/local/bin/notify.sh
       Restart=always
       User=root
