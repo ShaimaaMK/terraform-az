@@ -2,10 +2,6 @@ variable "resource_group" {
   description = "Nom du groupe de ressources Azure"
   type        = string
 }
-variable "resource_group_id" {
-  type        = string
-  description = "L'ID complet du Resource Group Azure"
-}
 
 variable "region" {
   description = "Région Azure"
