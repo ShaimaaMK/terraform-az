@@ -1,6 +1,6 @@
 output "vm_id" {
   description = "ID de la VM Spot recréée"
-  value       = azapi_resource.spot_vm.id
+  value       = azapi_resource.new_spot_vm.id
 }
 
 output "snapshot_id" {
