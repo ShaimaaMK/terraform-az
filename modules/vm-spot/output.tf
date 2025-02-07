@@ -5,7 +5,7 @@ output "vm_id" {
 
 output "snapshot_id" {
   description = "ID du snapshot utilisé"
-  value       = azurerm_managed_disk.os_disk_from_snapshot.id
+  value       = azurerm_managed_disk.new_os_disk_from_snapshot.id
 }
 
 output "public_ip" {
