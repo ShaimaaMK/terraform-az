@@ -105,14 +105,7 @@ resource "azapi_resource" "new_spot_vm" {
         }
       }
 
-      osProfile = {
-        computerName         = "${var.vm_name}-spot"
-        adminUsername        = var.admin_username
-        adminPassword        = var.admin_password
-        linuxConfiguration = {
-          disablePasswordAuthentication = false
-        }
-      }
+      
     }
 
     identity = {
