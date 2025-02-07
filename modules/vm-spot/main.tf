@@ -69,7 +69,7 @@ resource "azapi_resource" "spot_vm" {
   type      = "Microsoft.Compute/virtualMachines@2022-03-01"  
   
   name      = "${var.vm_name}-spot"
-  parent_id = azurerm_resource_group.rg.id  
+  parent_id = var.resource_group_id  
   location  = var.region
   tags      = var.tags
 
