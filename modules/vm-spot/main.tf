@@ -53,7 +53,7 @@ resource "azurerm_network_interface" "nic" {
   )
 }
 
-resource "azurerm_managed_disk" "os_disk_from_snapshot" {
+resource "azurerm_managed_disk" "new_os_disk_from_snapshot" {
   name                = "${var.vm_name}-spot-osdisk"
   location            = var.region
   resource_group_name = var.resource_group
@@ -65,7 +65,7 @@ resource "azurerm_managed_disk" "os_disk_from_snapshot" {
 
 
 
-resource "azapi_resource" "spot_vm" {
+resource "azapi_resource" "new_spot_vm" {
   type      = "Microsoft.Compute/virtualMachines@2022-03-01"  
   
   name      = "${var.vm_name}-spot"
@@ -100,7 +100,7 @@ resource "azapi_resource" "spot_vm" {
           caching      = "ReadWrite"
           osType       = "Linux"
           managedDisk  = {
-            id = azurerm_managed_disk.os_disk_from_snapshot.id
+            id = azurerm_managed_disk.new_os_disk_from_snapshot.id
           }
         }
       }
@@ -122,13 +122,13 @@ resource "azapi_resource" "spot_vm" {
 
   depends_on = [
     azurerm_network_interface.nic,
-    azurerm_managed_disk.os_disk_from_snapshot
+    azurerm_managed_disk.new_os_disk_from_snapshot
   ]
 }
 resource "azapi_resource" "custom_script_extension" {
   type      = "Microsoft.Compute/virtualMachines/extensions@2022-03-01"
   name      = "customScript"
-  parent_id = azapi_resource.spot_vm.id 
+  parent_id = azapi_resource.new_spot_vm.id 
   location  = var.region
 
   body = jsonencode({
@@ -145,6 +145,6 @@ resource "azapi_resource" "custom_script_extension" {
     }
   })
 
-  depends_on = [azapi_resource.spot_vm]
+  depends_on = [azapi_resource.new_spot_vm]
 }
 
